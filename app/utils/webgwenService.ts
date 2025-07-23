@@ -4,51 +4,44 @@ import type { DevelopmentConfigsModel } from '~/lib/persistence/models/developme
 import type { AnalysisResultModel } from '~/lib/persistence/models/analysisResult.model';
 
 export class WebGenService {
-  generateWebsitePrompt(
-    project: ProjectModel,
-    analysisResult: AnalysisResultModel,
-    developmentConfigs: DevelopmentConfigsModel,
-  ): string {
+  generateWebsitePrompt(project: ProjectModel): string {
+    console.log('Generating website prompt...');
+    console.log('Project:', project);
+    console.log('Analysis Result:', project.analysisResultModel);
+    console.log('Development Configs:', project.analysisResultModel.development.configs);
+
     if (!project?.description) {
       throw new Error('Project description is required');
     }
 
     const sections = [
-      this._buildIntroduction(),
       this._buildProjectOverview(project),
-      this._buildUMLDiagrams(analysisResult),
-      this._buildTechnicalSpecs(project, developmentConfigs),
-      this._buildBrandGuidelines(analysisResult.branding),
-      this._buildDevelopmentStack(developmentConfigs),
+      this._buildUMLDiagrams(project.analysisResultModel),
+      this._buildTechnicalSpecs(project, project.analysisResultModel.development.configs),
+      this._buildBrandGuidelines(project.analysisResultModel.branding),
+      this._buildDevelopmentStack(project.analysisResultModel.development.configs),
       this._buildContentStrategy(),
       this._buildDesignRequirements(),
-      this._buildOutputRequirements(developmentConfigs),
+      this._buildOutputRequirements(project.analysisResultModel.development.configs),
       this._buildQualityStandards(),
     ];
 
     return sections.filter((section) => section).join('\n\n');
   }
 
-  private _buildIntroduction(): string {
-    return `# LANDING PAGE CREATION BRIEF
-            **Objective:** Create a high-converting, modern landing page that aligns with the project requirements and brand identity. Follow current web design best practices for layout, performance, and user experience.`;
-  }
-
   private _buildProjectOverview(project: ProjectModel): string {
     return `# PROJECT OVERVIEW
 **Name:** ${project.name}
 **Description:** ${project.description}
-**Target Audience:** ${project.targets || 'Not specified'}
-${project.constraints?.length ? `**Constraints:**\n${project.constraints.map((c) => `- ${c}`).join('\n')}` : ''}`;
+**Target Audience:** ${project.targets ? JSON.stringify(project.targets) : 'Not specified'}
+`;
   }
 
   private _buildUMLDiagrams(analysisResult: AnalysisResultModel): string {
     const design = analysisResult.design;
     return `# UML DIAGRAMS & DESIGN
 **Design Information:** ${design ? JSON.stringify(design, null, 2) : 'No design information available'}
-
-**Architecture:**
-${analysisResult.architectures.map((arch) => `- ${JSON.stringify(arch, null, 2)}`).join('\n')}`;
+`;
   }
 
   private _buildTechnicalSpecs(project: ProjectModel, developmentConfigs: DevelopmentConfigsModel): string {
@@ -100,8 +93,8 @@ ${developmentConfigs.constraints.map((c) => `- ${c}`).join('\n')}`
   private _buildBrandGuidelines(brand: BrandIdentityModel): string {
     return `# BRAND GUIDELINES
 **Visual Identity:**
-- Colors: ${brand.colors.colors}
-- Typography: ${brand.typography}
+- Colors: ${JSON.stringify(brand.colors.colors)}
+- Typography: ${JSON.stringify(brand.typography)}
 ${brand.logo?.svg ? `- Logo: ${brand.logo.svg}` : ''}
 `;
   }

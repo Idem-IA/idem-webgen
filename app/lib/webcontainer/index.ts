@@ -184,9 +184,13 @@ export async function updateWebContainerMetadata(metadata: {
  * Exporter tous les fichiers du webcontainer.
  */
 async function exportWebContainerProject(webContainer: WebContainer): Promise<Record<string, string>> {
+  logger.info('Exporting webcontainer project...');
+
   const files: Record<string, string> = {};
 
   async function readDirRecursive(dir: string) {
+    logger.info(`Reading directory ${dir}...`);
+
     try {
       const entries = await webContainer.fs.readdir(dir, { withFileTypes: true });
 
@@ -197,6 +201,8 @@ async function exportWebContainerProject(webContainer: WebContainer): Promise<Re
         if (shouldIgnoreFile(fullPath)) {
           continue;
         }
+
+        logger.info(`Reading file ${fullPath}...`);
 
         try {
           if (entry.isDirectory()) {

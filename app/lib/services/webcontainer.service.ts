@@ -14,7 +14,8 @@ export class WebContainerService {
   private readonly _apiBaseUrl: string;
 
   constructor() {
-    this._apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api' + '/developments';
+    this._apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+    this._apiBaseUrl += '/project/developments';
   }
 
   /**
