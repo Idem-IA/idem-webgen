@@ -193,6 +193,7 @@ async function exportWebContainerProject(webContainer: WebContainer): Promise<Re
 
     try {
       const entries = await webContainer.fs.readdir(dir, { withFileTypes: true });
+      logger.debug(`Directory ${dir} contains ${entries.length} entries`);
 
       for (const entry of entries) {
         const fullPath = `${dir}/${entry.name}`;

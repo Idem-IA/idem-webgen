@@ -7,5 +7,5 @@ export function getGeminiModel(apiKey: string) {
     apiKey,
   });
 
-  return gemini('gemini-2.0-flash');
+  return gemini('gemini-2.5-flash');
 }

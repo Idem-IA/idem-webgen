@@ -14,6 +14,9 @@ export class WebGenService {
       throw new Error('Project description is required');
     }
 
+    // Déterminer si c'est un projet Angular
+    const isAngular = project.analysisResultModel.development.configs.frontend.framework.toLowerCase() === 'angular';
+
     const sections = [
       this._buildProjectOverview(project),
       this._buildUMLDiagrams(project.analysisResultModel),
@@ -26,7 +29,40 @@ export class WebGenService {
       this._buildQualityStandards(),
     ];
 
-    return sections.filter((section) => section).join('\n\n');
+    if (isAngular) {
+      sections.push(`# IMPORTANT ANGULAR INSTRUCTIONS
+When generating an Angular application, you MUST create ALL necessary files for a working application, including but not limited to:
+
+1. project structure files:
+   - package.json with Angular dependencies
+   - angular.json for Angular CLI configuration
+   - tsconfig.json for TypeScript configuration
+
+2. application files:
+   - src/main.ts - entry point
+   - src/app/app.module.ts - main module
+   - src/app/app.component.ts - root component
+   - src/app/app.component.html - template
+   - src/app/app.component.css - styles
+   - src/app/app-routing.module.ts - routing
+
+3. configuration files:
+   - src/environments/environment.ts
+   - src/environments/environment.prod.ts
+
+Failure to generate ANY of these files will result in a non-functioning application.`);
+    }
+
+    const basePrompt = sections.filter((section) => section).join('\n\n');
+
+    if (isAngular) {
+      return (
+        basePrompt +
+        '\n\n# FINAL REMINDER\nCreate ALL necessary files for a complete Angular application structure. The application WILL NOT WORK if any essential files are missing. Package.json alone is NOT sufficient.\n\nGenerate app.module.ts, app.component.ts, main.ts, and all other required files to ensure a functioning Angular application.'
+      );
+    }
+
+    return basePrompt;
   }
 
   private _buildProjectOverview(project: ProjectModel): string {
@@ -102,11 +138,23 @@ ${brand.logo?.svg ? `- Logo: ${brand.logo.svg}` : ''}
   private _buildDevelopmentStack(developmentConfigs: DevelopmentConfigsModel): string {
     const { frontend, backend, database } = developmentConfigs;
 
+    let frameworkDetails = '';
+
+    if (frontend.framework.toLowerCase() === 'angular') {
+      frameworkDetails = `
+- Angular CLI: Required for project setup
+- Angular Modules: Core, Common, Forms, HttpClient
+- Angular Router: For application routing
+- Angular Material (optional): For UI components
+- RxJS: For reactive programming
+`;
+    }
+
     return `# DEVELOPMENT STACK
 **Frontend:**
 - Framework: ${frontend.framework} ${frontend.frameworkVersion || ''}
 - Styling: ${Array.isArray(frontend.styling) ? frontend.styling.join(', ') : frontend.styling}
-${frontend.stateManagement ? `- State Management: ${frontend.stateManagement}` : ''}
+${frontend.stateManagement ? `- State Management: ${frontend.stateManagement}` : ''}${frameworkDetails}
 
 **Backend:**
 - Language: ${backend.language || 'Not specified'} ${backend.languageVersion || ''}
@@ -158,13 +206,28 @@ ${this._formatFeatures(database.features)}`;
   private _buildOutputRequirements(developmentConfigs: DevelopmentConfigsModel): string {
     const { frontend, backend, database } = developmentConfigs;
 
+    let frameworkSpecificInstructions = '';
+
+    if (frontend.framework.toLowerCase() === 'angular') {
+      frameworkSpecificInstructions = `
+**Angular Specific Requirements:**
+- Complete file structure with core modules (app.module.ts, etc.)
+- Component files (.ts, .html, .css)
+- Angular routing configuration
+- Angular services for data handling
+- Angular environment configuration
+- Proper import statements throughout
+- All necessary files for a working Angular application
+`;
+    }
+
     return `# OUTPUT REQUIREMENTS
 **Code Structure:**
 - Well-structured ${frontend.framework} components
 - TypeScript typing throughout
 - Environment configuration for ${backend.framework}
 - ${backend.apiType} API implementation
-- ${database.provider} database integration
+- ${database.provider} database integration${frameworkSpecificInstructions}
 
 **Frontend Deliverables:**
 - ${frontend.framework} ${frontend.frameworkVersion || ''} application
